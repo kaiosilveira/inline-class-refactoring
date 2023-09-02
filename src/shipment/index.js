@@ -12,11 +12,11 @@ export class Shipment {
   }
 
   get shippingCompany() {
-    return this._trackingInformation.shippingCompany;
+    return this._shippingCompany;
   }
 
   set shippingCompany(arg) {
-    this._trackingInformation.shippingCompany = arg;
+    this._shippingCompany = arg;
   }
 
   get trackingNumber() {
