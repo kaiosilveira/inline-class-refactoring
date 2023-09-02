@@ -10,4 +10,8 @@ export class Shipment {
   set trackingInformation(aTrackingInformation) {
     this._trackingInformation = aTrackingInformation;
   }
+
+  set shippingCompany(arg) {
+    this._trackingInformation.shippingCompany = arg;
+  }
 }
