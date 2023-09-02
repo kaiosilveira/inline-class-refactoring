@@ -8,7 +8,7 @@ describe('Shipment', () => {
     shipment.trackingInformation = trackingInfo;
 
     shipment.shippingCompany = 'DHL';
-    shipment.trackingInformation.trackingNumber = '1234567890';
+    shipment.trackingNumber = '1234567890';
 
     expect(shipment.trackingInfo).toEqual('DHL: 1234567890');
   });

@@ -14,4 +14,8 @@ export class Shipment {
   set shippingCompany(arg) {
     this._trackingInformation.shippingCompany = arg;
   }
+
+  set trackingNumber(arg) {
+    this._trackingInformation.trackingNumber = arg;
+  }
 }

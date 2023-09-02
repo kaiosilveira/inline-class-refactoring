@@ -6,6 +6,6 @@ const trackingInfo = new TrackingInformation();
 aShipment.trackingInformation = trackingInfo;
 
 aShipment.shippingCompany = 'DHL';
-aShipment.trackingInformation.trackingNumber = '1234567890';
+aShipment.trackingNumber = '1234567890';
 
 console.log(aShipment.trackingInfo);
