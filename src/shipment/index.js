@@ -20,10 +20,10 @@ export class Shipment {
   }
 
   get trackingNumber() {
-    return this._trackingInformation.trackingNumber;
+    return this._trackingNumber;
   }
 
   set trackingNumber(arg) {
-    this._trackingInformation.trackingNumber = arg;
+    this._trackingNumber = arg;
   }
 }
