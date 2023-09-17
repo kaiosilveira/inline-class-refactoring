@@ -1,101 +1,361 @@
-[![Continuous Integration](https://github.com/kaiosilveira/refactoring-catalog-template/actions/workflows/ci.yml/badge.svg)](https://github.com/kaiosilveira/refactoring-catalog-template/actions/workflows/ci.yml)
-
-# Refactoring catalog repository template
-
-This is a quick template to help me get a new refactoring repo going.
-
-## Things to do after creating a repo off of this template
-
-1. Replace `[REPOSITORY_NAME]` by the actual repository name
-
-2. Set the text at the project description in GitHub to
-
-```
-Working example with detailed commit history on the "[REPOSITORY_NAME]" refactoring based on Fowler's "Refactoring" book"
-```
-
-3. Replace the lorem ipsum text sections below with actual text
-
-4. Configure the CI badge:
-
-```
-[![CI](https://github.com/kaiosilveira/[REPOSITORY_NAME]/actions/workflows/ci.yml/badge.svg)](https://github.com/kaiosilveira/[REPOSITORY_NAME]/actions/workflows/ci.yml)
-```
-
-## Useful commands
-
-- Generate a patch diff and write the result to a file:
-
-```bash
-git log --patch --reverse > data.diff
-```
-
-- Generates the commit history table for the last section, including the correct links
-
-```bash
-yarn template:generate-cmt-table [REPOSITORY_NAME]
-```
-
----
+[![Continuous Integration](https://github.com/kaiosilveira/inline-class-refactoring/actions/workflows/ci.yml/badge.svg)](https://github.com/kaiosilveira/inline-class-refactoring/actions/workflows/ci.yml)
 
 ℹ️ _This repository is part of my Refactoring catalog based on Fowler's book with the same title. Please see [kaiosilveira/refactoring](https://github.com/kaiosilveira/refactoring) for more details._
 
-# Refactoring name
+---
 
-**Refactoring introduction and motivation** dolore sunt deserunt proident enim excepteur et cillum duis velit dolor. Aute proident laborum officia velit culpa enim occaecat officia sunt aute labore id anim minim. Eu minim esse eiusmod enim nulla Lorem. Enim velit in minim anim anim ad duis aute ipsum voluptate do nulla. Ad tempor sint dolore et ullamco aute nulla irure sunt commodo nulla aliquip.
+# Inline Class
+
+<table>
+<thead>
+<tr>
+<th>Before</th>
+<th>After</th>
+</tr>
+</thread>
+<tobdy>
+<tr>
+<td>
+
+```javascript
+class Person {
+  get officeAreaCode() {
+    return this._telephoneNumber.areaCode;
+  }
+
+  get officeNumber() {
+    return this._telephoneNumber.number;
+  }
+}
+
+class TelephoneNumber {
+  get areaCode() {
+    return this._areaCode;
+  }
+
+  get number() {
+    return this._number;
+  }
+}
+```
+
+</td>
+
+<td>
+
+```javascript
+class Person {
+  get officeAreaCode() {
+    return this._officeAreaCode;
+  }
+
+  get officeNumber() {
+    return this._officeNumber;
+  }
+}
+```
+
+</td>
+
+</tr>
+</tobdy>
+</table>
+
+**Inverse of: [Extract class](https://github.com/kaiosilveira/inline-class-refactoring)**
+
+As a result of the flexibility we have in healthy codebases, we often move things around to test new ideas, to better isolate responsibilities, and/or to reallocate behavior throughout our layers. Sometimes, though, we go too far. This refactoring helps in these cases where we want to merge two or more classes into a single unit.
 
 ## Working example
 
-**Working example general explanation** proident reprehenderit mollit non voluptate ea aliquip ad ipsum anim veniam non nostrud. Cupidatat labore occaecat labore veniam incididunt pariatur elit officia. Aute nisi in nulla non dolor ullamco ut dolore do irure sit nulla incididunt enim. Cupidatat aliquip minim culpa enim. Fugiat occaecat qui nostrud nostrud eu exercitation Lorem pariatur fugiat ea consectetur pariatur irure. Officia dolore veniam duis duis eu eiusmod cupidatat laboris duis ad proident adipisicing. Minim veniam consectetur ut deserunt fugiat id incididunt reprehenderit.
+Our starting point for this example is a `Shipment` class, which holds a reference to a `TrackingInformation` instance that holds its tracking data. We want to inline `TrackingInformation`, so all the tracking-related data is part of `Shipment`.
 
-**Before**
+### Supporting test suite
 
-```javascript
-function functionBeforeBeingRefactored(arg1, arg2) {}
-```
-
-And after going through the refactoring steps detailed in the next section, we have the following code as a result:
-
-**After**
+To make sure our refactoring steps don't break anything, we have the following supporting test suite:
 
 ```javascript
-function functionAfterBeingRefactored(...args) {}
-```
+describe('Shipment', () => {
+  it('should provide a readable text of its tracking info', () => {
+    const shipment = new Shipment();
 
-**Refactoring considerations and final thoughts** id culpa mollit sit laborum aute dolore sint id nisi. Sunt voluptate in nostrud esse occaecat adipisicing ullamco. Ut nisi quis eu aliquip ut est commodo labore ad aute aliquip.
+    shipment.shippingCompany = 'DHL';
+    shipment.trackingNumber = '1234567890';
 
-### Test suite
-
-Occaecat et incididunt aliquip ex id dolore. Et excepteur et ea aute culpa fugiat consectetur veniam aliqua. Adipisicing amet reprehenderit elit qui.
-
-```javascript
-describe('functionBeingRefactored', () => {
-  it('should work', () => {
-    expect(0).toEqual(1);
+    expect(shipment.trackingInfo).toEqual('DHL: 1234567890');
   });
 });
 ```
 
-Magna ut tempor et ut elit culpa id minim Lorem aliqua laboris aliqua dolor. Irure mollit ad in et enim consequat cillum voluptate et amet esse. Fugiat incididunt ea nulla cupidatat magna enim adipisicing consequat aliquip commodo elit et. Mollit aute irure consequat sunt. Dolor consequat elit voluptate aute duis qui eu do veniam laborum elit quis.
+It basically covers the most complex functionality in our system: printing the tracking info of a shipment, which delegates to the `TrackingInformation.display` method for this work.
 
 ### Steps
 
-**Step 1 description** mollit eu nulla mollit irure sint proident sint ipsum deserunt ad consectetur laborum incididunt aliqua. Officia occaecat deserunt in aute veniam sunt ad fugiat culpa sunt velit nulla. Pariatur anim sit minim sit duis mollit.
+To start things up, we introduce a delegate to `shippingCompany` at `Shipment`. This will help us moving the field later:
 
 ```diff
-diff --git a/src/price-order/index.js b/src/price-order/index.js
-@@ -3,6 +3,11 @@
--module.exports = old;
-+module.exports = new;
+diff --git a/src/caller.js b/src/caller.js
+@@ -5,7 +5,7 @@ const aShipment = new Shipment();
+ const trackingInfo = new TrackingInformation();
+ aShipment.trackingInformation = trackingInfo;
+
+-aShipment.trackingInformation.shippingCompany = 'DHL';
++aShipment.shippingCompany = 'DHL';
+ aShipment.trackingInformation.trackingNumber = '1234567890';
+
+ console.log(aShipment.trackingInfo);
+
+diff --git a/src/shipment/index.js b/src/shipment/index.js
+@@ -10,4 +10,8 @@
+export class Shipment {
+   set trackingInformation(aTrackingInformation) {
+     this._trackingInformation = aTrackingInformation;
+   }
++
++  set shippingCompany(arg) {
++    this._trackingInformation.shippingCompany = arg;
++  }
+ }
+
+diff --git a/src/shipment/index.test.js b/src/shipment/index.test.js
+@@ -7,7 +7,7 @@
+describe('Shipment', () => {
+     const trackingInfo = new TrackingInformation();
+     shipment.trackingInformation = trackingInfo;
+
+-    shipment.trackingInformation.shippingCompany = 'DHL';
++    shipment.shippingCompany = 'DHL';
+     shipment.trackingInformation.trackingNumber = '1234567890';
+
+     expect(shipment.trackingInfo).toEqual('DHL: 1234567890');
 ```
 
-**Step n description** mollit eu nulla mollit irure sint proident sint ipsum deserunt ad consectetur laborum incididunt aliqua. Officia occaecat deserunt in aute veniam sunt ad fugiat culpa sunt velit nulla. Pariatur anim sit minim sit duis mollit.
+By the same token, we introduce a delegate to `trackingNumber`:
 
 ```diff
-diff --git a/src/price-order/index.js b/src/price-order/index.js
-@@ -3,6 +3,11 @@
--module.exports = old;
-+module.exports = new;
+
+diff --git a/src/caller.js b/src/caller.js
+@@ -6,6 +6,6 @@ const trackingInfo = new TrackingInformation();
+ aShipment.trackingInformation = trackingInfo;
+
+ aShipment.shippingCompany = 'DHL';
+-aShipment.trackingInformation.trackingNumber = '1234567890';
++aShipment.trackingNumber = '1234567890';
+
+ console.log(aShipment.trackingInfo);
+diff --git a/src/shipment/index.js b/src/shipment/index.js
+@@ -14,4 +14,8 @@
+export class Shipment {
+   set shippingCompany(arg) {
+     this._trackingInformation.shippingCompany = arg;
+   }
++
++  set trackingNumber(arg) {
++    this._trackingInformation.trackingNumber = arg;
++  }
+ }
+
+diff --git a/src/shipment/index.test.js b/src/shipment/index.test.js
+@@ -8,7 +8,7 @@
+describe('Shipment', () => {
+     shipment.trackingInformation = trackingInfo;
+
+     shipment.shippingCompany = 'DHL';
+-    shipment.trackingInformation.trackingNumber = '1234567890';
++    shipment.trackingNumber = '1234567890';
+
+     expect(shipment.trackingInfo).toEqual('DHL: 1234567890');
+   });
+```
+
+Then, we can start moving things. We introduce a getter for `shippingCompany` at `Shipment`
+
+```diff
+diff --git a/src/shipment/index.js b/src/shipment/index.js
+@@ -11,6 +11,10 @@
+export class Shipment {
+     this._trackingInformation = aTrackingInformation;
+   }
+
++  get shippingCompany() {
++    return this._trackingInformation.shippingCompany;
++  }
++
+   set shippingCompany(arg) {
+     this._trackingInformation.shippingCompany = arg;
+   }
+```
+
+...and a getter for `trackingNumber`:
+
+```diff
+diff --git a/src/shipment/index.js b/src/shipment/index.js
+@@ -19,6 +19,10 @@
+export class Shipment {
+     this._trackingInformation.shippingCompany = arg;
+   }
+
++  get trackingNumber() {
++    return this._trackingInformation.trackingNumber;
++  }
++
+   set trackingNumber(arg) {
+     this._trackingInformation.trackingNumber = arg;
+   }
+```
+
+Finally, we can start inlining things. We first inline `trackingInformation.display` into `Shipment.trackingInfo`:
+
+```diff
+diff --git a/src/shipment/index.js b/src/shipment/index.js
+@@ -1,6 +1,6 @@
+ export class Shipment {
+   get trackingInfo() {
+-    return this._trackingInformation.display;
++    return `${this.shippingCompany}: ${this.trackingNumber}`;
+   }
+
+   get trackingInformation() {
+```
+
+And then we move the `shippingCompany` field:
+
+```diff
+diff --git a/src/shipment/index.js b/src/shipment/index.js
+@@ -12,11 +12,11 @@
+export class Shipment {
+   }
+
+   get shippingCompany() {
+-    return this._trackingInformation.shippingCompany;
++    return this._shippingCompany;
+   }
+
+   set shippingCompany(arg) {
+-    this._trackingInformation.shippingCompany = arg;
++    this._shippingCompany = arg;
+   }
+
+   get trackingNumber() {
+```
+
+Finally, we move the `trackingNumber` field:
+
+```diff
+
+diff --git a/src/shipment/index.js b/src/shipment/index.js
+@@ -20,10 +20,10 @@
+export class Shipment {
+   }
+
+   get trackingNumber() {
+-    return this._trackingInformation.trackingNumber;
++    return this._trackingNumber;
+   }
+
+   set trackingNumber(arg) {
+-    this._trackingInformation.trackingNumber = arg;
++    this._trackingNumber = arg;
+   }
+ }
+```
+
+And now we can stop using `TrackingInformation`:
+
+```diff
+diff --git a/src/caller.js b/src/caller.js
+@@ -1,9 +1,6 @@
+ import { Shipment } from './shipment/index.js';
+-import { TrackingInformation } from './tracking-information/index.js';
+
+ const aShipment = new Shipment();
+-const trackingInfo = new TrackingInformation();
+-aShipment.trackingInformation = trackingInfo;
+
+ aShipment.shippingCompany = 'DHL';
+ aShipment.trackingNumber = '1234567890';
+
+diff --git a/src/shipment/index.js b/src/shipment/index.js
+@@ -3,14 +3,6 @@
+export class Shipment {
+     return `${this.shippingCompany}: ${this.trackingNumber}`;
+   }
+
+-  get trackingInformation() {
+-    return this._trackingInformation;
+-  }
+-
+-  set trackingInformation(aTrackingInformation) {
+-    this._trackingInformation = aTrackingInformation;
+-  }
+-
+   get shippingCompany() {
+     return this._shippingCompany;
+   }
+
+diff --git a/src/shipment/index.test.js b/src/shipment/index.test.js
+@@ -1,11 +1,8 @@
+ import { Shipment } from '.';
+-import { TrackingInformation } from '../tracking-information';
+
+ describe('Shipment', () => {
+   it('should provide a readable text of its tracking info', () => {
+     const shipment = new Shipment();
+-    const trackingInfo = new TrackingInformation();
+-    shipment.trackingInformation = trackingInfo;
+
+     shipment.shippingCompany = 'DHL';
+     shipment.trackingNumber = '1234567890';
+```
+
+To clean things up, we can now safely delete `TrackingInformation`:
+
+```diff
+diff --git a/src/tracking-information/index.js b/src/tracking-information/index.js
+deleted file mode 100644
+index d108113..0000000
+--- a/src/tracking-information/index.js
++++ /dev/null
+@@ -1,21 +0,0 @@
+-export class TrackingInformation {
+-  get shippingCompany() {
+-    return this._shippingCompany;
+-  }
+-
+-  set shippingCompany(arg) {
+-    this._shippingCompany = arg;
+-  }
+-
+-  get trackingNumber() {
+-    return this._trackingNumber;
+-  }
+-
+-  set trackingNumber(arg) {
+-    this._trackingNumber = arg;
+-  }
+-
+-  get display() {
+-    return `${this.shippingCompany}: ${this.trackingNumber}`;
+-  }
+-}
+
+diff --git a/src/tracking-information/index.test.js b/src/tracking-information/index.test.js
+deleted file mode 100644
+index 2ba2416..0000000
+--- a/src/tracking-information/index.test.js
++++ /dev/null
+@@ -1,12 +0,0 @@
+-import { TrackingInformation } from '.';
+-
+-describe('TrackingInformation', () => {
+-  it('should provide a readable display of its info', () => {
+-    const trackingInfo = new TrackingInformation();
+-
+-    trackingInfo.shippingCompany = 'DHL';
+-    trackingInfo.trackingNumber = '1234567890';
+-
+-    expect(trackingInfo.display).toEqual('DHL: 1234567890');
+-  });
+-});
 ```
 
 And that's it!
@@ -104,10 +364,16 @@ And that's it!
 
 Below there's the commit history for the steps detailed above.
 
-| Commit SHA                                                                  | Message                  |
-| --------------------------------------------------------------------------- | ------------------------ |
-| [cmt-sha-1](https://github.com/kaiosilveira/[REPOSITORY_NAME]/commit-SHA-1) | description of commit #1 |
-| [cmt-sha-2](https://github.com/kaiosilveira/[REPOSITORY_NAME]/commit-SHA-2) | description of commit #2 |
-| [cmt-sha-n](https://github.com/kaiosilveira/[REPOSITORY_NAME]/commit-SHA-n) | description of commit #n |
+| Commit SHA                                                                                                          | Message                                                           |
+| ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| [8e9ec1f](https://github.com/kaiosilveira/inline-class-refactoring/commit/8e9ec1f1f322477c228308c93c493850b2631482) | introduce delegate to `shippingCompany` at `Shipment`             |
+| [df6db45](https://github.com/kaiosilveira/inline-class-refactoring/commit/df6db45ad38849ae50be937a8ce0d26e7d39a4c1) | introduce delegate to `trackingNumber` at `Shipment`              |
+| [79d6a0d](https://github.com/kaiosilveira/inline-class-refactoring/commit/79d6a0d80b2c60839f1909f31b71fe5d46534174) | introduce getter for `shippingCompany` at `Shipment`              |
+| [07dd9e3](https://github.com/kaiosilveira/inline-class-refactoring/commit/07dd9e329274622849bcc3c7dbede13a9c7fc534) | introduce getter `trackingNumber` at `Shipment`                   |
+| [ffc8c87](https://github.com/kaiosilveira/inline-class-refactoring/commit/ffc8c8742032d143466395f6004e923d23fc21f5) | inline `trackingInformation.display` into `Shipment.trackingInfo` |
+| [510c1cb](https://github.com/kaiosilveira/inline-class-refactoring/commit/510c1cb671e2b60ca85dd66493e726262adc62f2) | move `shippingCompany` field to `Shipment`                        |
+| [7c254eb](https://github.com/kaiosilveira/inline-class-refactoring/commit/7c254eb8c8109b164b8eb3943358db055cbfd4c5) | move `trackingNumber` field to `Shipment`                         |
+| [c5f7f7c](https://github.com/kaiosilveira/inline-class-refactoring/commit/c5f7f7c10670ac1cf04c309ced542c2214d2a857) | stop using `TrackingInformation` at `Shipment`                    |
+| [b38c7d5](https://github.com/kaiosilveira/inline-class-refactoring/commit/b38c7d52e62aea191469b530795c7994ae05c77a) | delete `TrackingInformation`                                      |
 
-For the full commit history for this project, check the [Commit History tab](https://github.com/kaiosilveira/[REPOSITORY_NAME]/commits/main).
+For the full commit history for this project, check the [Commit History tab](https://github.com/kaiosilveira/inline-class-refactoring/commits/main).
